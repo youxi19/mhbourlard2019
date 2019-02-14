@@ -3,41 +3,39 @@
 //------------------------------------------------------------------------------------------------------------------------
 
 //Settings
-const zoomFactor = 1.3;
-//const cwidth = 1000;
-//const cheight = 600;
-const slowSpeed = 2;
-const highSpeed = 7;
+const zoomFactor = 1.3
+const slowSpeed = 2
+const highSpeed = 7
 
 
 //Initialising the canvas
-const canvas = document.getElementById("gameboard");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = 600;
+const canvas = document.getElementById("gameboard")
+const ctx = canvas.getContext("2d")
+canvas.width = window.innerWidth
+canvas.height = 600
 
 //creating the board
 class Board {
   constructor() {
-    this.x = 0;
-    this.y = 0;
-    this.img = new Image();
-    this.img.src = "images/background.jpg";
-    this.height = canvas.height;
-    this.width = canvas.width;
+    this.x = 0
+    this.y = 0
+    this.img = new Image()
+    this.img.src = "images/background.jpg"
+    this.height = canvas.height
+    this.width = canvas.width
   }
 }
 
-const board = new Board();
+const board = new Board()
 
 
 //GENERAL RE-USABLE FUNCTIONS
 
 //Draw elements on canvas
 function draw(object) {
-  ctx.beginPath();
-  ctx.drawImage(object.img, object.x, object.y, object.width, object.height);
-  ctx.closePath();
+  ctx.beginPath()
+  ctx.drawImage(object.img, object.x, object.y, object.width, object.height)
+  ctx.closePath()
 }
 
 //Detect collision between two objects
@@ -47,7 +45,7 @@ function collision(objA, objB) {
     objA.x + objA.width > objB.x &&
     objA.y < objB.y + objB.height &&
     objA.height + objA.y > objB.y
-  );
+  )
 }
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -56,27 +54,36 @@ function collision(objA, objB) {
 
 class Object {
   constructor(x, y, width, height, img) {
-    this.x = x;
-    this.y = y;
-    this.img = img;
-    this.width = width * zoomFactor;
-    this.height = height * zoomFactor;
+    this.x = x
+    this.y = y
+    this.img = img
+    this.width = width * zoomFactor
+    this.height = height * zoomFactor
   }
 }
 
 // // Objects creation
 
-//Load image for MHB
-const MHBimg = new Image();
-MHBimg.src = "images/MHB.png";
-//creation of MHB
-const mhb = new Object(5, 445, 50, 75, MHBimg);
+//Load image for Marie-Helene Bourlard
+const MHBimg = new Image()
+MHBimg.src = "images/MHB.png"
+const mhb = new Object(5, 445, 75, 75, MHBimg)
 
 //Load image for Parliament
-const parliamentImg = new Image();
-parliamentImg.src = "images/parliament.png";
-//creation of parliament
-const parliament = new Object(canvas.width - 200, 10, 150, 100, parliamentImg);
+const parliamentImg = new Image()
+parliamentImg.src = "images/parliament.png"
+const parliament = new Object(canvas.width - 200, 10, 150, 100, parliamentImg)
+
+//Load image for greedyBoss
+const greedyBossImg = new Image()
+greedyBossImg.src = "images/greedy-boss.png"
+const greedyBoss1 = new Object(canvas.width - 200, 180, 33, 50, greedyBossImg)
+const greedyBoss2 = new Object(200, 100, 33, 50, greedyBossImg)
+const greedyBoss3 = new Object(canvas.width - 500, 400, 33, 50, greedyBossImg)
+
+//Load sounds
+const backgroundSound = new Audio("sounds/bg-sound.wav")
+const winSound = new Audio("sounds/win-sound.wav")
 
 // //------------------------------------------------------------------------------------------------------------------------
 // //CHARACTERS PROJECTILES
@@ -223,130 +230,71 @@ const parliament = new Object(canvas.width - 200, 10, 150, 100, parliamentImg);
 // //GAME LOGIC AND VISUALS
 // //----------------------------------------------------------------------------------------------------------
 
-// //If the user manages to keep the game going on for 2 min without having the characters lose their temper, he wins yay yay!
-// const game = setTimeout(function() {
-//   clearInterval(drawLoop);
-// }, 90000);
+let requestID
 
-const startGame = () => {
-  
+const drawLoop = () => {
+    requestID = undefined
     //erase the old drawings
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     //redraw the background, the characters and user bar
-    draw(board);
-    draw(mhb);
-    draw(parliament);
-    // draw(kim);
+    draw(board)
+    draw(mhb)
+    draw(parliament)
+    draw(greedyBoss1)
+    draw(greedyBoss2)
+    draw(greedyBoss3)
 
+    startGame()
     //Manage hearts, rockets and tweets drawing and collisions
-    // heartsLogic();
-    // rocketsLogic();
-    // tweetsLogic();
-
-    //erase tweets that have been intercepted by a heart
-    // tweets = tweets.filter(function(oneTweet) {
-    //   return !oneTweet.isIntercepted;
-    // });
-
-    // rockets = rockets.filter(function(oneRocket) {
-    //   return !oneRocket.isIntercepted;
-    // });
-    const drawLoop = requestAnimationFrame(()=>{
-      startGame()
-  });
+    if(collision(mhb, parliament)){
+      endGame()
+      winSound.play()
+    }
+    
 }
-// function heartsLogic() {
-//   //Manage heart drawing and interaction with projectiles
-//   hearts.forEach(function(oneHeart) {
-//     //manage tweets interaction with hearts
-//     tweets.forEach(function(oneTweet) {
-//       if (collision(oneHeart, oneTweet)) {
-//         oneTweet.isIntercepted = true;
-//       }
-//     });
 
-//     //manage rockets interaction with hearts
-//     rockets.forEach(function(oneRocket) {
-//       if (collision(oneHeart, oneRocket)) {
-//         oneRocket.isIntercepted = true;
-//       }
-//     });
+const startGame = () => {
+  if (!requestID) {
+    requestID = window.requestAnimationFrame(drawLoop)
+ }
+}
 
-//     //Draw hearts
-//     draw(oneHeart);
-//     oneHeart.move();
-//   });
-// }
+const endGame = () => {
+  if (requestID) {
+    window.cancelAnimationFrame(requestID)
+    requestID = undefined
+ }
+ backgroundSound.pause()
+}
 
-// function rocketsLogic() {
-//   //manage rockets drawings and interaction with target
-//   rockets.forEach(function(oneRocket) {
-//     if (collision(oneRocket, trump)) {
-//       oneRocket.isIntercepted = true;
-//       trump.ego -= 5;
-//       document.getElementById("trump-ego").setAttribute("value", trump.ego);
-
-//       //If Trump loses face: GAME OVER - NUCLEAR WAR: YOUR KIDS WILL BE BORN WITH THREE LEGS AND ONLY ONE EYE
-//       if (trump.ego <= 0) {
-//         clearInterval(drawLoop);
-//         clearInterval(timerInterval);
-//       }
-//     }
-
-//     draw(oneRocket);
-//     oneRocket.move();
-//   });
-// }
-
-// function tweetsLogic() {
-//   //manage tweets drawings and interaction with target
-//   tweets.forEach(function(oneTweet) {
-//     //if a tweet hits Kim, kim's ego gets damage
-//     if (collision(oneTweet, kim)) {
-//       oneTweet.isIntercepted = true;
-//       kim.ego -= 5;
-//       document.getElementById("kim-ego").setAttribute("value", kim.ego);
-
-//       //if Kim loses face: GAME OVER - NUCLEAR WAR: YOUR KIDS WILL BE BORN WITH THREE LEGS AND ONLY ONE EYE
-//       if (kim.ego <= 0) {
-//         clearInterval(drawLoop);
-//         clearInterval(timerInterval);
-//       }
-//     }
-
-//     //Draw tweet
-//     draw(oneTweet);
-//     oneTweet.move();
-//   });
-// }
-
-const startButton = document.getElementById("start-button");
+const startButton = document.getElementById("start-button")
 startButton.onclick = ()=>{
-  startGame();
+  backgroundSound.play()
+  startGame()
 }
-// //
-// //-------------------------------------------------------------------------------------------------------------------
-// //USER INPUT
-// //-------------------------------------------------------------------------------------------------------------------
-const body = document.querySelector("body");
+
+//-------------------------------------------------------------------------------------------------------------------
+//USER INPUT
+//-------------------------------------------------------------------------------------------------------------------
+const body = document.querySelector("body")
 body.onkeydown = e => {
-  e.preventDefault();
-  if (e.keyCode === 39) {
-    if (mhb.x <= (canvas.width - mhb.width - 10)) {
-      mhb.x += 20;
-    }
-  } else if (e.keyCode === 37) {
+  e.preventDefault()
+  if (e.keyCode === 37) {
     if (mhb.x >= 10) {
-      mhb.x -= 20;
-    }
+      mhb.x -= 20
+    } 
   } else if (e.keyCode === 38) {
     if (mhb.y >= 20) {
-      mhb.y -= 20;
+      mhb.y -= 20
+    }
+  } else if (e.keyCode === 39) {
+    if (mhb.x <= (canvas.width - mhb.width - 10)) {
+      mhb.x += 20
     }
   } else if (e.keyCode === 40) {
     if (mhb.y <= (canvas.height - mhb.height - 10)) {
-      mhb.y += 20;
+      mhb.y += 20
     }
   }
-};
+}
